@@ -125,6 +125,9 @@ nav{background:var(--blue-dark);padding:14px 6%;display:flex;align-items:center;
 .form-field select option{background:var(--blue-dark);color:#fff}
 .submit-btn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--blue-dark);border:none;padding:14px;border-radius:50px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;transition:transform .2s}
 .submit-btn:hover{transform:translateY(-2px)}
+.form-note{font-size:11px;color:rgba(255,255,255,0.5);text-align:center;margin-top:12px;line-height:1.5}
+.form-note a{color:var(--gold-light);text-decoration:none}
+.form-note a:hover{text-decoration:underline}
 footer{background:var(--blue-dark);border-top:3px solid var(--gold);padding:28px 6%;text-align:center}
 .footer-logo{font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-bottom:8px}
 .footer-logo span{color:var(--gold)}
@@ -338,29 +341,36 @@ footer a:hover{color:var(--gold)}
     </div>
     <div class="contact-form fade-up d2">
       <h3>Send an Inquiry</h3>
-      <div class="form-field">
-        <label>Your Name</label>
-        <input type="text" id="fi-name" placeholder="Juan dela Cruz">
-      </div>
-      <div class="form-field">
-        <label>Email or Phone</label>
-        <input type="text" id="fi-contact" placeholder="your@email.com or 09xx">
-      </div>
-      <div class="form-field">
-        <label>I'm interested in</label>
-        <select id="fi-product">
-          <option value="">Select a product...</option>
-          <option>Basic Sales &amp; Inventory Package — ₱169</option>
-          <option>Sales &amp; Billing Suite — ₱299</option>
-          <option>Premium Business Bundle — ₱349</option>
-          <option>Custom Tracker — Request a Quote</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label>Message</label>
-        <textarea id="fi-msg" placeholder="Tell us what you need, or ask any question!"></textarea>
-      </div>
-      <button class="submit-btn" onclick="sendInquiry()">Send Inquiry ✦</button>
+      <form id="inquiry-form" onsubmit="return sendInquiry(event)">
+        <div class="form-field">
+          <label>Your Name *</label>
+          <input type="text" id="fi-name" name="name" placeholder="Juan dela Cruz" required>
+        </div>
+        <div class="form-field">
+          <label>Email or Phone *</label>
+          <input type="text" id="fi-contact" name="contact" placeholder="your@email.com or 09xx" required>
+        </div>
+        <div class="form-field">
+          <label>I'm interested in</label>
+          <select id="fi-product" name="product">
+            <option value="">Select a product...</option>
+            <option>Basic Sales &amp; Inventory Package — ₱169</option>
+            <option>Sales &amp; Billing Suite — ₱299</option>
+            <option>Premium Business Bundle — ₱349</option>
+            <option>Custom Tracker — Request a Quote</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Message</label>
+          <textarea id="fi-msg" name="message" placeholder="Tell us what you need, or ask any question!"></textarea>
+        </div>
+        <button type="submit" class="submit-btn">Send Inquiry ✦</button>
+      </form>
+      <p class="form-note">
+        Can't send email? Contact us directly:<br>
+        <a href="mailto:dadadigitalproducts@outlook.com">dadadigitalproducts@outlook.com</a> | 
+        <a href="tel:+639762879916">0976 287 9916</a>
+      </p>
     </div>
   </div>
 </section>
@@ -372,17 +382,79 @@ footer a:hover{color:var(--gold)}
 </footer>
 
 <script>
-const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:0.1});
-document.querySelectorAll('.fade-up').forEach(el=>observer.observe(el));
-function sendInquiry(){
-  const name=document.getElementById('fi-name').value;
-  const contact=document.getElementById('fi-contact').value;
-  const product=document.getElementById('fi-product').value;
-  const msg=document.getElementById('fi-msg').value;
-  if(!name||!contact){alert('Please fill in your name and contact info.');return;}
-  const subject=product?'Inquiry: '+product:'Website Inquiry';
-  const body='Name: '+name+'\nContact: '+contact+'\nProduct: '+(product||'Not specified')+'\n\nMessage:\n'+msg;
-  window.location.href='mailto:dadadigitalproducts@outlook.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+// Fade-up animation observer
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, {threshold: 0.1});
+
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// Enhanced Send Inquiry Function with Multiple Fallbacks
+function sendInquiry(event) {
+  // Prevent form default submission
+  if (event) event.preventDefault();
+  
+  // Get form values
+  const name = document.getElementById('fi-name').value.trim();
+  const contact = document.getElementById('fi-contact').value.trim();
+  const product = document.getElementById('fi-product').value;
+  const msg = document.getElementById('fi-msg').value.trim();
+  
+  // Validation
+  if (!name) {
+    alert('⚠️ Please enter your name.');
+    document.getElementById('fi-name').focus();
+    return false;
+  }
+  
+  if (!contact) {
+    alert('⚠️ Please enter your email or phone number.');
+    document.getElementById('fi-contact').focus();
+    return false;
+  }
+  
+  // Build email content
+  const subject = product ? 'Inquiry: ' + product : 'Website Inquiry from ' + name;
+  const body = 'Name: ' + name + '\n' +
+               'Contact: ' + contact + '\n' +
+               'Product: ' + (product || 'Not specified') + '\n\n' +
+               'Message:\n' + (msg || 'No message provided') + '\n\n' +
+               '---\n' +
+               'Sent from: https://dadaquizon.github.io/dadadigitalss/';
+  
+  // Create mailto link
+  const mailtoLink = 'mailto:dadadigitalproducts@outlook.com' +
+                     '?subject=' + encodeURIComponent(subject) +
+                     '&body=' + encodeURIComponent(body);
+  
+  // Try to open email client
+  try {
+    window.location.href = mailtoLink;
+    
+    // Show success message after short delay
+    setTimeout(function() {
+      alert('✅ Thank you, ' + name + '!\n\n' +
+            'Your email client should open now.\n\n' +
+            'If it doesn\'t open, please email us directly at:\n' +
+            'dadadigitalproducts@outlook.com\n\n' +
+            'Or call/text: 0976 287 9916');
+    }, 500);
+    
+  } catch (error) {
+    // Fallback if mailto fails
+    alert('⚠️ Unable to open email client.\n\n' +
+          'Please email us directly at:\n' +
+          'dadadigitalproducts@outlook.com\n\n' +
+          'Or call/text: 0976 287 9916\n\n' +
+          'Your inquiry details:\n' +
+          'Name: ' + name + '\n' +
+          'Contact: ' + contact + '\n' +
+          'Product: ' + (product || 'Not specified'));
+  }
+  
+  return false;
 }
 </script>
 </body>
